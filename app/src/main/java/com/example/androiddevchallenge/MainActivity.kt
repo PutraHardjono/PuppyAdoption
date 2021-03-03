@@ -16,21 +16,28 @@
 package com.example.androiddevchallenge
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.androiddevchallenge.ui.theme.MyTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigate
+import androidx.navigation.compose.rememberNavController
+import com.example.androiddevchallenge.data.Doggo
+import com.example.androiddevchallenge.ui.theme.PuppyAdoptionTheme
 
 class MainActivity : AppCompatActivity() {
+
+    private val viewModel by viewModels<MainViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MyTheme {
-                MyApp()
+            PuppyAdoptionTheme (darkTheme = true) {
+                PuppyAdoptionApp(viewModel)
             }
         }
     }
@@ -38,24 +45,92 @@ class MainActivity : AppCompatActivity() {
 
 // Start building your app here!
 @Composable
-fun MyApp() {
-    Surface(color = MaterialTheme.colors.background) {
-        Text(text = "Ready... Set... GO!")
+fun PuppyAdoptionApp(viewModel: MainViewModel) {
+
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") {
+            HomeScreen(
+                doggoList = viewModel.doggos,
+                navigateToDetail = { doggo ->
+                    navController.navigate("detail/${doggo.id}")
+                }) }
+        composable("detail/{id}") { navBackStackEntry ->
+            val id = navBackStackEntry.arguments?.getString("id")
+            val doggo = viewModel.doggos.find { it.id == id }
+
+            doggo?.let {
+                DetailScreen(
+                    doggo = doggo,
+                    navigateUp = { navController.navigateUp() }
+                )
+            }
+        }
     }
 }
 
 @Preview("Light Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun LightPreview() {
-    MyTheme {
-        MyApp()
+    PuppyAdoptionTheme {
+        HomeScreen(doggosPreview){}
     }
 }
 
 @Preview("Dark Theme", widthDp = 360, heightDp = 640)
 @Composable
 fun DarkPreview() {
-    MyTheme(darkTheme = true) {
-        MyApp()
+    PuppyAdoptionTheme(darkTheme = true) {
+        HomeScreen(doggosPreview){}
     }
 }
+
+val doggoPreview = Doggo(
+    "Peter Pan",
+    "Puppy",
+    R.drawable.peter_pan_01,
+    "Male",
+    "Affenpinscher",
+    "Mangilao, GU",
+    "Vaccinations up to date"
+)
+
+val doggosPreview: List<Doggo> = listOf(
+    Doggo(
+        "Paisley",
+        "Adult",
+        R.drawable.paisley_01,
+        "Female",
+        "Affenpinscher",
+        "Mangilao, GU",
+        "Vaccinations up to date"
+    ),
+    Doggo(
+        "Peter Pan",
+        "Puppy",
+        R.drawable.peter_pan_01,
+        "Male",
+        "Affenpinscher",
+        "Mangilao, GU",
+        "Vaccinations up to date"
+    ),
+    Doggo(
+        "Mocha",
+        "Puppy",
+        R.drawable.mocha_01,
+        "Female",
+        "Pug & Affenpinscher mix",
+        "Mangilao, GU",
+        "Vaccinations up to date"
+    ),
+    Doggo(
+        "Audi",
+        "Young",
+        R.drawable.audi_01,
+        "Female",
+        "Chihuahua & Jack Russel Terrier mix",
+        "Mangilao, GU",
+        "Vaccinations up to date"
+    ),
+)
